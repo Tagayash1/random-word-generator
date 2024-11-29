@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ランダムワードジェネレーター</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    text-align: center;
+  }
+  #wordDisplay {
+    font-size: 2em;
+    margin-bottom: 20px;
+    display: none;
+  }
+  #scoreDisplay {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    display: none;
+  }
+  #timeDisplay {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    display: none;
+  }
+  #roundDisplay {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    display: none;
+  }
+  .game-buttons {
+    display: none;
+  }
+  .next-round-container {
+    display: none;
+  }
+  button {
+    font-size: 1.2em;
+    padding: 10px 20px;
+    margin: 5px;
+  }
+</style>
+</head>
+<body>
+<div id="wordDisplay"></div>
+<div id="scoreDisplay">スコア: 0</div>
+<div id="timeDisplay">残り時間: 3:00</div>
+<div id="roundDisplay">ラウンド: 1</div>
+<div id="startButtonContainer">
+  <button id="startButton">ゲームを開始</button>
+</div>
+<div class="next-round-container">
+  <button id="nextRoundButton">次のラウンドを開始</button>
+</div>
+<div class="game-buttons">
+  <button id="nextButton">次の単語</button>
+  <button id="passButton">パス</button>
+</div>
+
+<script>
+const words = [
+  "サッカー", "ラグビー", "バドミントン", "バスケットボール", "フィギュアスケート", "アイスホッケー",
+  "テニス", "ゴルフ", "スキー", "ボクシング", "ハンドボール", "フェンシング",
+  "パンダ", "カンガルー", "イルカ", "ペンギン", "キリン", "ラクダ", "ゴリラ", "ゾウ",
+  "クマ", "キツネ", "インコ", "リス",
+  "ラーメン", "ピザ", "オムライス", "ミートスパゲティ", "ハンバーガー", "クッキー",
+  "サラダ", "サンドウィッチ", "カレー", "チョコレート", "ケーキ"
+];
+const maxRounds = 3; // 最大ラウンド数
+let currentRound = 1;
+let usedWords = [];
+let allUsedWords = []; // 全ラウンドで使用した単語を記録
+let score = 0;
+let timer;
+let remainingTime = 180; // 初期値: 180秒 (3分)
+
+document.getElementById('startButton').addEventListener('click', function() {
+  startGame();
+});
+
+document.getElementById('nextRoundButton').addEventListener('click', function() {
+  document.querySelector('.next-round-container').style.display = 'none';
+  document.querySelector('.game-buttons').style.display = 'flex';
+  resetRound();
+});
+
+document.getElementById('nextButton').addEventListener('click', function() {
+  if (usedWords.length === words.length) {
+    alert("すべての単語を使い切りました！お疲れさまでした！");
+    endRound();
+    return;
+  }
+  score++;
+  updateWord();
+  updateScore();
+});
+
+document.getElementById('passButton').addEventListener('click', function() {
+  if (usedWords.length === words.length) {
+    alert("すべての単語を使い切りました！お疲れさまでした！");
+    endRound();
+    return;
+  }
+  updateWord();
+});
+
+function startGame() {
+  document.getElementById('startButtonContainer').style.display = 'none';
+  document.getElementById('wordDisplay').style.display = 'block';
+  document.getElementById('scoreDisplay').style.display = 'block';
+  document.getElementById('timeDisplay').style.display = 'block';
+  document.getElementById('roundDisplay').style.display = 'block';
+  document.querySelector('.game-buttons').style.display = 'flex';
+  updateWord();
+  startTimer();
+}
+
+function updateWord() {
+  let remainingWords = words.filter(word => !allUsedWords.includes(word));
+  if (remainingWords.length === 0) {
+    // すべての単語が使用済みの場合、リセットして再利用
+    allUsedWords = [];
+    remainingWords = words.filter(word => !usedWords.includes(word));
+  }
+  const randomIndex = Math.floor(Math.random() * remainingWords.length);
+  const word = remainingWords[randomIndex];
+  usedWords.push(word);
+  allUsedWords.push(word);
+  document.getElementById('wordDisplay').textContent = word;
+}
+
+function updateScore() {
+  document.getElementById('scoreDisplay').textContent = 'スコア: ' + score;
+}
+
+function endRound() {
+  alert(`ラウンド ${currentRound} 終了！\nこのラウンドのスコア: ${score} ポイント`);
+  if (currentRound < maxRounds) {
+    currentRound++;
+    document.querySelector('.game-buttons').style.display = 'none';
+    document.querySelector('.next-round-container').style.display = 'block';
+    document.getElementById('roundDisplay').textContent = `ラウンド: ${currentRound}`;
+  } else {
+    alert("全ラウンド終了！お疲れさまでした！");
+    resetGame();
+  }
+}
+
+function resetRound() {
+  usedWords = [];
+  score = 0;
+  remainingTime = 180; // 残り時間をリセット
+  document.getElementById('wordDisplay').textContent = "";
+  document.getElementById('timeDisplay').textContent = "残り時間: 3:00";
+  updateScore();
+  clearTimeout(timer);
+  startTimer();
+  updateWord();
+}
+
+function resetGame() {
+  currentRound = 1;
+  usedWords = [];
+  allUsedWords = [];
+  score = 0;
+  remainingTime = 180;
+  document.getElementById('startButtonContainer').style.display = 'block';
+  document.querySelector('.next-round-container').style.display = 'none';
+  document.querySelector('.game-buttons').style.display = 'none';
+  document.getElementById('wordDisplay').textContent = "";
+  document.getElementById('timeDisplay').textContent = "残り時間: 3:00";
+  document.getElementById('scoreDisplay').textContent = "スコア: 0";
+  document.getElementById('roundDisplay').textContent = "ラウンド: 1";
+  clearTimeout(timer);
+}
+
+function startTimer() {
+  clearTimeout(timer);
+  timer = setInterval(function() {
+    if (remainingTime <= 0) {
+      clearInterval(timer);
+      alert(`ラウンド ${currentRound} 終了！\nこのラウンドのスコア: ${score} ポイント`);
+      endRound();
+      return;
+    }
+    remainingTime--;
+    updateTimeDisplay();
+  }, 1000); // 毎秒更新
+}
+
+function updateTimeDisplay() {
+  const minutes = Math.floor(remainingTime / 60);
+  const seconds = remainingTime % 60;
+  document.getElementById('timeDisplay').textContent = `残り時間: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+</script>
+</body>
+</html>
